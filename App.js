@@ -11,7 +11,7 @@ export default function App() {
         <Stack.Screen name='splash' component={SplashPage}
           options={{ headerShown: false }}/>
         <Stack.Screen name='home' component={HomePage}
-          options={{ title: 'Home Page' }} />
+          options={{ headerShown:false }} />
       </Stack.Navigator>
 
     }</NavigationContainer>
