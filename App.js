@@ -8,9 +8,9 @@ export default function App() {
   return (
     <NavigationContainer>{
       <Stack.Navigator initialRouteName='SplashPage'>
-        <Stack.Screen name='SplashPage' component={SplashPage}
-          options={{ title: 'Splash Page' }} />
-        <Stack.Screen name='HomePage' component={HomePage}
+        <Stack.Screen name='splash' component={SplashPage}
+          options={{ headerShown: false }}/>
+        <Stack.Screen name='home' component={HomePage}
           options={{ title: 'Home Page' }} />
       </Stack.Navigator>
 
