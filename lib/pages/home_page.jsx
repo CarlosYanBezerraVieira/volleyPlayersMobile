@@ -1,29 +1,31 @@
-import { useState, useEffect } from "react";
-import Header from "../core/components/header/Header.jsx";
-import volleyService from "../services/volei_service.js";
-import ListOfComponents from "../core/components/list_of_components/ListOfComponents.jsx";
-import LoadingSpinner from "../core/components/loading_spinner/LoadingSpinner.jsx";
+import React, { useState, useEffect } from "react";
+import { View, StyleSheet,  } from "react-native";
+import Header from "../core/components/header/Header"; // Adaptado para React Native
+import volleyService from "../services/volei_service"; // Certifique-se de que esse serviço funcione com fetch/axios
+import ListOfComponents from "../core/components/list_of_components/ListOfComponents"; // Adaptado para React Native
+import LoadingSpinner from "../core/components/loading_spinner/LoadingSpinner"; 
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // Adaptado para React Native
 
 const HomePage = () => {
   const [teams, setTeams] = useState([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true); // Estado para controlar o carregamento
+  const [loading, setLoading] = useState(true);
 
   async function getData(params) {
-    setLoading(true); // Inicia o carregamento
+    setLoading(true);
     try {
       const data = await volleyService.getTeamsOfVolley(params);
-
-
-      console.log(data.response);
       let value = data.response.map(team => {
         return { ...team, isFavorited: false };
       });
+    
+     
       setTeams(value);
     } catch (error) {
       console.error("Erro ao buscar times de vôlei:", error);
     } finally {
-      setLoading(false); // Finaliza o carregamento
+      setLoading(false);
     }
   }
 
@@ -35,8 +37,8 @@ const HomePage = () => {
   };
 
   const filterTeams = (isFavorited) => {
+   
     let data;
-
     if (search === "") {
       data = teams.filter(team => team.isFavorited === isFavorited);
       return data;
@@ -48,52 +50,96 @@ const HomePage = () => {
     return data;
   };
 
-  // useEffect(() => {
-  //   getData();
-  // }, []);
+  useEffect(() => {
+    getData();
+  }, []);
 
-  // useEffect(() => {
-  //   const noTeamsFound = filterTeams(false).length === 0 && filterTeams(true).length === 0;
+  useEffect(() => {
+    const noTeamsFound = filterTeams(false).length === 0 && filterTeams(true).length === 0;
 
-  //   if (noTeamsFound) {
-  //     if (search.length > 2) {
-  //       getData({ search });
-  //       console.log('Nenhum resultado encontrado, fazendo requisição com pesquisa...');
-  //     } else if (search.length > 2 && noTeamsFound) {
-  //       getData();
-  //       console.log('Nenhum resultado encontrado, carregando dados iniciais...');
-  //     }
-  //   }
-  // }, [search]);
+    if (noTeamsFound && search.length > 2) {
+      getData({ search });
+    }
+  }, [search]);
 
-
+  function TeamsTab() {
+    return (
+      <View style={styles.listWrapper}>
+      <ListOfComponents
+        teams={filterTeams(false)}
+        onFavoriteToggle={toggleFavorite}
+        title="Times de Vôlei"
+      />
+    </View>
+    );
+  }
+  
+  function FavoriteTeamsTab() {
+    return (
+      <View style={styles.listWrapper}>
+      <ListOfComponents
+        teams={filterTeams(true)}
+        onFavoriteToggle={toggleFavorite}
+        title="Times de Vôlei Favoritos"
+      />
+    </View>
+    );
+  }
+  
+  const Tab = createBottomTabNavigator();
   return (
-    <>
-      <Header onChange={(value) => setSearch(value.target.value)} />
+    <View style={styles.container}>
+      <Header onChange={setSearch} /> 
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-          <LoadingSpinner />
-        </div>
+          <LoadingSpinner />     
       ) : (
-        <div style={{ display: 'flex' }}>
-          <div style={{ flex: 1, marginLeft: '20px' }}>
-            <ListOfComponents
-              teams={filterTeams(false)}
-              onFavoriteToggle={toggleFavorite}
-              title="Times de Vôlei"
-            />
-          </div>
-          <div style={{ flex: 1, marginRight: '20px' }}>
-            <ListOfComponents
-              teams={filterTeams(true)}
-              onFavoriteToggle={toggleFavorite}
-              title="Times de Vôlei Favoritos"
-            />
-          </div>
-        </div>
+
+        
+        <Tab.Navigator
+        screenOptions={({ route }) => ({
+          headerShown: false, // Oculta o cabeçalho padrão do Tab Navigator
+         
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+  
+            if (route.name === 'Times') {
+              iconName =  'soccer-field'; 
+            } else if (route.name === 'Favoritos') {
+              iconName =  'star' ;
+            }
+  
+  
+            // Use MaterialCommunityIcons para exibir os ícones
+            return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: 'tomato',
+          tabBarInactiveTintColor: 'gray',
+        })}
+      >
+        <Tab.Screen name="Times" component={TeamsTab} />
+        <Tab.Screen name="Favoritos" component={FavoriteTeamsTab} />
+      </Tab.Navigator>
       )}
-    </>
+    </View>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  
+  listContainer: {
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    padding: 20,
+  },
+  listWrapper: {
+    backgroundColor: '#fff',
+    flex: 1,
+    margin: 10,
+  },
+});
 
 export default HomePage;
